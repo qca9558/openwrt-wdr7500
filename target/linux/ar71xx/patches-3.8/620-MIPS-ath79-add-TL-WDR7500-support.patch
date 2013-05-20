@@ -1,0 +1,33 @@
+diff --git a/arch/mips/ath79/Kconfig b/arch/mips/ath79/Kconfig
+index a061e2e..8c15dde 100644
+--- a/arch/mips/ath79/Kconfig
++++ b/arch/mips/ath79/Kconfig
+@@ -565,6 +565,16 @@ config ATH79_MACH_TL_WDR4300
+ 	select ATH79_DEV_USB
+ 	select ATH79_DEV_WMAC
+ 
++config ATH79_MACH_TL_WDR7500
++	bool "TP-LINK TL-WDR7500 board support"
++	select SOC_QCA955X
++	select ATH79_DEV_GPIO_BUTTONS
++	select ATH79_DEV_LEDS_GPIO
++	select ATH79_DEV_NFC
++	select ATH79_DEV_SPI
++	select ATH79_DEV_USB
++	select ATH79_DEV_WMAC
++
+ config ATH79_MACH_TL_WR703N
+ 	bool "TP-LINK TL-WR703N support"
+ 	select SOC_AR933X
+diff --git a/arch/mips/ath79/Makefile b/arch/mips/ath79/Makefile
+index 6781b55..71fe7d9 100644
+--- a/arch/mips/ath79/Makefile
++++ b/arch/mips/ath79/Makefile
+@@ -84,6 +84,7 @@ obj-$(CONFIG_ATH79_MACH_TL_WA901ND)	+= mach-tl-wa901nd.o
+ obj-$(CONFIG_ATH79_MACH_TL_WA901ND_V2)	+= mach-tl-wa901nd-v2.o
+ obj-$(CONFIG_ATH79_MACH_TL_WDR3500)     += mach-tl-wdr3500.o
+ obj-$(CONFIG_ATH79_MACH_TL_WDR4300)     += mach-tl-wdr4300.o
++obj-$(CONFIG_ATH79_MACH_TL_WDR7500)     += mach-tl-wdr7500.o
+ obj-$(CONFIG_ATH79_MACH_TL_WR741ND)	+= mach-tl-wr741nd.o
+ obj-$(CONFIG_ATH79_MACH_TL_WR741ND_V4)	+= mach-tl-wr741nd-v4.o
+ obj-$(CONFIG_ATH79_MACH_TL_WR841N_V1)	+= mach-tl-wr841n.o

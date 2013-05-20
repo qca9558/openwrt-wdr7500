@@ -134,6 +134,7 @@ get_status_led() {
 		;;
 	tl-wdr4300 | \
 	tl-wr703n | \
+	tl-wdr7500 | \
 	tl-wr720n-v3)
 		status_led="tp-link:blue:system"
 		;;
