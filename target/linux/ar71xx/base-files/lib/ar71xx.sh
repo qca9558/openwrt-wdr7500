@@ -156,6 +156,9 @@ tplink_board_detect() {
 	"430000"*)
 		model="TP-Link TL-WDR4300"
 		;;
+	"750000"*)
+		model="TP-Link TL-WDR7500"
+		;;
 	"431000"*)
 		model="TP-Link TL-WDR4310"
 		;;
@@ -416,6 +419,9 @@ ar71xx_board_detect() {
 		;;
 	*"TL-WDR3600/4300/4310")
 		name="tl-wdr4300"
+		;;
+	*"TL-WDR7500")
+		name="tl-wdr7500"
 		;;
 	*TL-WR741ND)
 		name="tl-wr741nd"
