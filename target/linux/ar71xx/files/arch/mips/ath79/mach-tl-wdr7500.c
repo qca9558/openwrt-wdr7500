@@ -57,32 +57,32 @@ static struct flash_platform_data wdr7500_flash_data = {
 
 static struct gpio_led wdr7500_leds_gpio[] __initdata = {
 	{
-		.name		= "wdr7500:green:status",
+		.name		= "tp-link:green:status",
 		.gpio		= WDR7500_GPIO_LED_STATUS_GREEN,
 		.active_low	= 1,
 	},
 	{
-		.name		= "wdr7500:red:status",
+		.name		= "tp-link:red:status",
 		.gpio		= WDR7500_GPIO_LED_STATUS_RED,
 		.active_low	= 1,
 	},
 	{
-		.name		= "wdr7500:green:wps",
+		.name		= "tp-link:green:wps",
 		.gpio		= WDR7500_GPIO_LED_WPS_GREEN,
 		.active_low	= 1,
 	},
 	{
-		.name		= "wdr7500:red:wps",
+		.name		= "tp-link:red:wps",
 		.gpio		= WDR7500_GPIO_LED_WPS_RED,
 		.active_low	= 1,
 	},
 	{
-		.name		= "wdr7500:red:wlan-2g",
+		.name		= "tp-link:red:wlan-2g",
 		.gpio		= WDR7500_GPIO_LED_WLAN_2G,
 		.active_low	= 1,
 	},
 	{
-		.name		= "wdr7500:red:usb",
+		.name		= "tp-link:red:usb",
 		.gpio		= WDR7500_GPIO_LED_USB,
 		.active_low	= 1,
 	}
@@ -139,7 +139,7 @@ static struct mdio_board_info wdr7500_mdio0_info[] = {
 
 static void __init wdr7500_setup(void)
 {
-  u8 *art;
+	u8 *art;
 	void __iomem *base;
 	u32 t;
 
@@ -210,4 +210,4 @@ static void __init wdr7500_setup(void)
 
 MIPS_MACHINE(ATH79_MACH_TL_WDR7500, "TL-WDR7500",
 	     "TP-LINK WDR7500",
-	     wdr7500_setup);
+	      wdr7500_setup);
