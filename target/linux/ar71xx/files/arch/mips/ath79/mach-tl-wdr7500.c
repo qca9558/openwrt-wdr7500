@@ -219,5 +219,5 @@ static void __init wdr7500_setup(void)
 }
 
 MIPS_MACHINE(ATH79_MACH_TL_WDR7500, "TL-WDR7500",
-	     "TP-LINK WDR7500",
+	     "TP-LINK TL-WDR7500",
 	      wdr7500_setup);
