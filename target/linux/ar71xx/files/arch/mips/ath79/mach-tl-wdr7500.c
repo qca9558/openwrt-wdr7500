@@ -1,6 +1,6 @@
 
 /*
- *  TP-LINK TL-WDR4300 board support
+ *  TP-LINK TL-WDR7500 board support
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,16 +26,18 @@
 #include "dev-wmac.h"
 #include "machtypes.h"
 
-#define WDR7500_GPIO_LED_USB		4
-#define WDR7500_GPIO_LED_WLAN_5G		12
-#define WDR7500_GPIO_LED_WLAN_2G		13
-#define WDR7500_GPIO_LED_STATUS_RED	14
-#define WDR7500_GPIO_LED_WPS_RED		15
-#define WDR7500_GPIO_LED_STATUS_GREEN	19
-#define WDR7500_GPIO_LED_WPS_GREEN	20
+#define WDR7500_GPIO_LED_USB1		18
+#define WDR7500_GPIO_LED_USB2		19
+#define WDR7500_GPIO_LED_SYSTEM		14
+#define WDR7500_GPIO_LED_QSS		15
 
 #define WDR7500_GPIO_BTN_WPS		16
-#define WDR7500_GPIO_BTN_RFKILL		21
+#define WDR7500_GPIO_BTN_RFKILL0	13
+#define WDR7500_GPIO_BTN_RFKILL1	23
+
+#define WDR7500_GPIO_USB1_POWER		22
+#define WDR7500_GPIO_USB2_POWER		21
+
 
 #define WDR7500_KEYS_POLL_INTERVAL	20	/* msecs */
 #define WDR7500_KEYS_DEBOUNCE_INTERVAL	(3 * WDR7500_KEYS_POLL_INTERVAL)
@@ -57,40 +59,35 @@ static struct flash_platform_data wdr7500_flash_data = {
 
 static struct gpio_led wdr7500_leds_gpio[] __initdata = {
 	{
-		.name		= "tp-link:green:status",
-		.gpio		= WDR7500_GPIO_LED_STATUS_GREEN,
+		.name		= "tp-link:blue:qss",
+		.gpio		= WDR7500_GPIO_LED_QSS,
 		.active_low	= 1,
 	},
 	{
-		.name		= "tp-link:red:status",
-		.gpio		= WDR7500_GPIO_LED_STATUS_RED,
+		.name		= "tp-link:blue:system",
+		.gpio		= WDR7500_GPIO_LED_SYSTEM,
 		.active_low	= 1,
 	},
 	{
-		.name		= "tp-link:green:wps",
-		.gpio		= WDR7500_GPIO_LED_WPS_GREEN,
+		.name		= "tp-link:green:usb1",
+		.gpio		= WDR7500_GPIO_LED_USB1,
 		.active_low	= 1,
 	},
 	{
-		.name		= "tp-link:red:wps",
-		.gpio		= WDR7500_GPIO_LED_WPS_RED,
+		.name		= "tp-link:green:usb2",
+		.gpio		= WDR7500_GPIO_LED_USB2,
 		.active_low	= 1,
 	},
-	{
-		.name		= "tp-link:red:wlan-2g",
-		.gpio		= WDR7500_GPIO_LED_WLAN_2G,
-		.active_low	= 1,
-	},
-	{
-		.name		= "tp-link:red:usb",
-		.gpio		= WDR7500_GPIO_LED_USB,
-		.active_low	= 1,
-	}
+	/*{ unsure about this, will need to test with actual hardware
+	*	.name		= "tp-link:blue:wlan2g",
+	*	.gpio		= WDR7500_GPIO_LED_WLAN_2G,
+	*	.active_low	= 1,
+	},*/
 };
 
 static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
 	{
-		.desc		= "WPS button",
+		.desc		= "QSS button",
 		.type		= EV_KEY,
 		.code		= KEY_WPS_BUTTON,
 		.debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
@@ -98,11 +95,19 @@ static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
 		.active_low	= 1,
 	},
 	{
-		.desc		= "RFKILL button",
-		.type		= EV_KEY,
+		.desc		= "RFKILL0 switch",
+		.type		= EV_SW,
 		.code		= KEY_RFKILL,
 		.debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
-		.gpio		= WDR7500_GPIO_BTN_RFKILL,
+		.gpio		= WDR7500_GPIO_BTN_RFKILL0,
+		.active_low	= 1,
+	},
+	{
+		.desc		= "RFKILL1 switch",
+		.type		= EV_SW,
+		.code		= KEY_RFKILL,
+		.debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
+		.gpio		= WDR7500_GPIO_BTN_RFKILL1,
 		.active_low	= 1,
 	},
 };
@@ -136,12 +141,28 @@ static struct mdio_board_info wdr7500_mdio0_info[] = {
 		.platform_data = &wdr7500_ar8327_data,
 	},
 };
+static void __init ath79_setup_qca955x_eth_cfg(u32 mask)
+{
+	void __iomem *base;
+	u32 t;
+
+	base = ioremap(QCA955X_GMAC_BASE, QCA955X_GMAC_SIZE);
+
+	t = __raw_readl(base + QCA955X_GMAC_REG_ETH_CFG);
+
+	t &= ~(QCA955X_ETH_CFG_RGMII_EN | QCA955X_ETH_CFG_GE0_SGMII);
+	t |= mask;
+
+	__raw_writel(t, base + QCA955X_GMAC_REG_ETH_CFG);
+	/* flush write */
+	__raw_readl(base + QCA955X_GMAC_REG_ETH_CFG);
+
+	iounmap(base);
+}
 
 static void __init wdr7500_setup(void)
 {
-	u8 *art;
-	void __iomem *base;
-	u32 t;
+	u8 *art = (u8 *) KSEG1ADDR(0x1fff0000);
 
 	/* GMAC0 of the AR8327 switch is connected to GMAC1 via SGMII */
 	wdr7500_ar8327_pad0_cfg.mode = AR8327_PAD_MAC_SGMII;
@@ -157,7 +178,6 @@ static void __init wdr7500_setup(void)
 	ath79_eth0_pll_data.pll_1000 = 0x56000000;
 	ath79_eth1_pll_data.pll_1000 = 0x03000101;
 
-	art = (u8 *) KSEG1ADDR(0x1fff0000);
 
 	ath79_register_m25p80(&wdr7500_flash_data);
 
@@ -172,17 +192,7 @@ static void __init wdr7500_setup(void)
 
 	ath79_register_wmac(art + WDR7500_WMAC_CALDATA_OFFSET, NULL);
 
-
-	base = ioremap(QCA955X_GMAC_BASE, QCA955X_GMAC_SIZE);
-
-	t = __raw_readl(base + QCA955X_GMAC_REG_ETH_CFG);
-
-	t &= ~(QCA955X_ETH_CFG_RGMII_EN | QCA955X_ETH_CFG_GE0_SGMII);
-	t |= QCA955X_ETH_CFG_RGMII_EN;
-
-	__raw_writel(t, base + QCA955X_GMAC_REG_ETH_CFG);
-
-	iounmap(base);
+	ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
 
 	ath79_register_mdio(0, 0x0);
 
