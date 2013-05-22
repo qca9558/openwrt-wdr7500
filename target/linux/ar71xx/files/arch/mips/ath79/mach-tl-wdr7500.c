@@ -112,8 +112,20 @@ static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
 	},
 };
 
-static struct ar8327_pad_cfg wdr7500_ar8327_pad0_cfg;
-static struct ar8327_pad_cfg wdr7500_ar8327_pad6_cfg;
+static struct ar8327_pad_cfg wdr7500_ar8327_pad0_cfg = {
+	/* GMAC0 of the AR8327 switch is connected to GMAC1 via SGMII */
+	.mode = AR8327_PAD_MAC_SGMII,
+	.sgmii_delay_en = true,
+};
+
+static struct ar8327_pad_cfg wdr7500_ar8327_pad6_cfg = {
+	/* GMAC6 of the AR8327 switch is connected to GMAC0 via RGMII */
+	.mode = AR8327_PAD_MAC_RGMII,
+	.txclk_delay_en = true,
+	.rxclk_delay_en = true,
+	.txclk_delay_sel = AR8327_CLK_DELAY_SEL1,
+	.rxclk_delay_sel = AR8327_CLK_DELAY_SEL2,
+};
 
 static struct ar8327_platform_data wdr7500_ar8327_data = {
 	.pad0_cfg = &wdr7500_ar8327_pad0_cfg,
@@ -164,21 +176,6 @@ static void __init wdr7500_setup(void)
 {
 	u8 *art = (u8 *) KSEG1ADDR(0x1fff0000);
 
-	/* GMAC0 of the AR8327 switch is connected to GMAC1 via SGMII */
-	wdr7500_ar8327_pad0_cfg.mode = AR8327_PAD_MAC_SGMII;
-	wdr7500_ar8327_pad0_cfg.sgmii_delay_en = true;
-
-	/* GMAC6 of the AR8327 switch is connected to GMAC0 via RGMII */
-	wdr7500_ar8327_pad6_cfg.mode = AR8327_PAD_MAC_RGMII;
-	wdr7500_ar8327_pad6_cfg.txclk_delay_en = true;
-	wdr7500_ar8327_pad6_cfg.rxclk_delay_en = true;
-	wdr7500_ar8327_pad6_cfg.txclk_delay_sel = AR8327_CLK_DELAY_SEL1;
-	wdr7500_ar8327_pad6_cfg.rxclk_delay_sel = AR8327_CLK_DELAY_SEL2;
-
-	ath79_eth0_pll_data.pll_1000 = 0x56000000;
-	ath79_eth1_pll_data.pll_1000 = 0x03000101;
-
-
 	ath79_register_m25p80(&wdr7500_flash_data);
 
 	ath79_register_leds_gpio(-1, ARRAY_SIZE(wdr7500_leds_gpio),
@@ -205,6 +202,7 @@ static void __init wdr7500_setup(void)
 	ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
 	ath79_eth0_data.phy_mask = BIT(0);
 	ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
+	ath79_eth0_pll_data.pll_1000 = 0x56000000;
 
 	ath79_register_eth(0);
 
@@ -212,6 +210,7 @@ static void __init wdr7500_setup(void)
 	ath79_eth1_data.phy_if_mode = PHY_INTERFACE_MODE_SGMII;
 	ath79_eth1_data.speed = SPEED_1000;
 	ath79_eth1_data.duplex = DUPLEX_FULL;
+	ath79_eth1_pll_data.pll_1000 = 0x03000101;
 
 	ath79_register_eth(1);
 
