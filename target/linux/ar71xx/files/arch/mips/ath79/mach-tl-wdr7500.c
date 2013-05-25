@@ -11,6 +11,7 @@
 
 #include <linux/platform_device.h>
 #include <linux/ar8216_platform.h>
+#include <linux/gpio.h>
 
 #include <asm/mach-ath79/ar71xx_regs.h>
 
@@ -184,7 +185,6 @@ static void __init wdr7500_setup(void)
 					ARRAY_SIZE(wdr7500_gpio_keys),
 					wdr7500_gpio_keys);
 
-	ath79_register_usb();
 	ath79_register_nfc();
 
 	ath79_register_wmac(art + WDR7500_WMAC_CALDATA_OFFSET, NULL);
@@ -215,6 +215,14 @@ static void __init wdr7500_setup(void)
 	ath79_register_eth(1);
 
 	ath79_register_pci();
+
+	gpio_request_one(WDR7500_GPIO_USB1_POWER,
+			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+			 "USB1 power");
+	gpio_request_one(WDR7500_GPIO_USB2_POWER,
+			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+			 "USB2 power");
+	ath79_register_usb();
 }
 
 MIPS_MACHINE(ATH79_MACH_TL_WDR7500, "TL-WDR7500",
