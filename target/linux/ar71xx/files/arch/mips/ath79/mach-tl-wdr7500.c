@@ -1,12 +1,9 @@
-
 /*
  *  TP-LINK TL-WDR7500 board support
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- *
+ *  This program is free software; you can redistribute it and/or modify it
+ *  under the terms of the GNU General Public License version 2 as published
+ *  by the Free Software Foundation.
  */
 
 #include <linux/platform_device.h>
@@ -38,7 +35,6 @@
 
 #define WDR7500_GPIO_USB1_POWER		22
 #define WDR7500_GPIO_USB2_POWER		21
-
 
 #define WDR7500_KEYS_POLL_INTERVAL	20	/* msecs */
 #define WDR7500_KEYS_DEBOUNCE_INTERVAL	(3 * WDR7500_KEYS_POLL_INTERVAL)
@@ -79,11 +75,6 @@ static struct gpio_led wdr7500_leds_gpio[] __initdata = {
 		.gpio		= WDR7500_GPIO_LED_USB2,
 		.active_low	= 1,
 	},
-	/*{ unsure about this, will need to test with actual hardware
-	*	.name		= "tp-link:blue:wlan2g",
-	*	.gpio		= WDR7500_GPIO_LED_WLAN_2G,
-	*	.active_low	= 1,
-	},*/
 };
 
 static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
@@ -185,6 +176,14 @@ static void __init wdr7500_setup(void)
 					ARRAY_SIZE(wdr7500_gpio_keys),
 					wdr7500_gpio_keys);
 
+	gpio_request_one(WDR7500_GPIO_USB1_POWER,
+			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+			 "USB1 power");
+	gpio_request_one(WDR7500_GPIO_USB2_POWER,
+			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
+			 "USB2 power");
+	ath79_register_usb();
+
 	ath79_register_nfc();
 
 	ath79_register_wmac(art + WDR7500_WMAC_CALDATA_OFFSET, NULL);
@@ -215,14 +214,6 @@ static void __init wdr7500_setup(void)
 	ath79_register_eth(1);
 
 	ath79_register_pci();
-
-	gpio_request_one(WDR7500_GPIO_USB1_POWER,
-			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
-			 "USB1 power");
-	gpio_request_one(WDR7500_GPIO_USB2_POWER,
-			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
-			 "USB2 power");
-	ath79_register_usb();
 }
 
 MIPS_MACHINE(ATH79_MACH_TL_WDR7500, "TL-WDR7500",
