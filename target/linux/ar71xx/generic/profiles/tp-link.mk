@@ -148,7 +148,7 @@ $(eval $(call Profile,TLWDR4300))
 
 define Profile/TLWDR7500
 	NAME:=TP-LINK TL-WDR7500
-	PACKAGES:=kmod-usb-core kmod-usb2 kmod-ledtrig-usbdev
+	PACKAGES:=kmod-usb-core kmod-usb2 kmod-usb-storage kmod-ledtrig-usbdev
 endef
 
 define Profile/TLWDR7500/Description

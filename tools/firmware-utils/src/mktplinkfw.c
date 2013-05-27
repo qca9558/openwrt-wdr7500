@@ -60,7 +60,6 @@
 #define HWID_TL_WR1043ND_V1	0x10430001
 #define HWID_TL_WR1041N_V2	0x10410002
 #define HWID_TL_WR2543N_V1	0x25430001
-#define HWID_TL_WDR7500_V1	0x75000001
 
 #define MD5SUM_LEN	16
 
@@ -343,11 +342,6 @@ static struct board_info boards[] = {
 		.hw_id		= HWID_TL_WR720N_V3,
 		.hw_rev		= 1,
 		.layout_id	= "4Mlzma",
-	}, {
-		.id		= "TL-WDR7500_V1",
-		.hw_id		= HWID_TL_WDR7500_V1,
-		.hw_rev		= 1,
-		.layout_id	= "8Mlzma",
 	}, {
 		/* terminating entry */
 	}
