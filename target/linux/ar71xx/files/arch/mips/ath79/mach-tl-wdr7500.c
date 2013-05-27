@@ -30,12 +30,10 @@
 #define WDR7500_GPIO_LED_USB1		18
 #define WDR7500_GPIO_LED_USB2		19
 #define WDR7500_GPIO_LED_SYSTEM		14
-#define WDR7500_GPIO_LED_QSS		15
+#define WDR7500_GPIO_LED_QSS			15
 
 #define WDR7500_GPIO_BTN_WPS		16
-#define WDR7500_GPIO_MODEL_REVISION     20
-#define WDR7500_GPIO_BTN_RFKILL0	13
-#define WDR7500_GPIO_BTN_RFKILL1	23
+#define WDR7500_GPIO_BTN_RFKILL		23
 
 #define WDR7500_GPIO_USB1_POWER		22
 #define WDR7500_GPIO_USB2_POWER		21
@@ -100,12 +98,11 @@ static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
 	 .active_low = 1,
 	 },
 	{
-	 .desc = "RFKILL button",
-	 .type = EV_KEY,
+	 .desc = "RFKILL switch",
+	 .type = EV_SW,
 	 .code = KEY_RFKILL,
 	 .debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
-	 .gpio = WDR7500_GPIO_BTN_RFKILL0,
-	 .active_low = 1,
+	 .gpio = WDR7500_GPIO_BTN_RFKILL,
 	 },
 };
 
@@ -179,17 +176,6 @@ static void __init wdr7500_setup(void)
 
 	ath79_register_leds_gpio(-1, ARRAY_SIZE(wdr7500_leds_gpio),
 				 wdr7500_leds_gpio);
-
-	/*
-	 * The rfkill button is different on trial production and mass production models.
-	 * In tp-links code they use GPIO13 for trial production and GPIO23 for mass production.
-	 * To see what model you have query GPIO20 where 0 indicates mass production.
-	 */
-	gpio_request_one(WDR7500_GPIO_MODEL_REVISION,
-			 GPIOF_DIR_IN | GPIOF_EXPORT_DIR_FIXED,
-			 "Model revision");
-	if (gpio_get_value(WDR7500_GPIO_MODEL_REVISION) == 0)
-		wdr7500_gpio_keys[1].gpio = WDR7500_GPIO_BTN_RFKILL1;
 
 	ath79_register_gpio_keys_polled(-1, WDR7500_KEYS_POLL_INTERVAL,
 					ARRAY_SIZE(wdr7500_gpio_keys),
