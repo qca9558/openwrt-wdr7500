@@ -24,12 +24,16 @@
 #include "dev-wmac.h"
 #include "machtypes.h"
 
+#define WDR7500_GPIO_LED_WLAN2G		12
+#define WDR7500_GPIO_LED_WLAN5G		17
+
 #define WDR7500_GPIO_LED_USB1		18
 #define WDR7500_GPIO_LED_USB2		19
 #define WDR7500_GPIO_LED_SYSTEM		14
 #define WDR7500_GPIO_LED_QSS		15
 
 #define WDR7500_GPIO_BTN_WPS		16
+#define WDR7500_GPIO_MODEL_REVISION     20
 #define WDR7500_GPIO_BTN_RFKILL0	13
 #define WDR7500_GPIO_BTN_RFKILL1	23
 
@@ -50,68 +54,70 @@ static const char *wdr7500_part_probes[] = {
 };
 
 static struct flash_platform_data wdr7500_flash_data = {
-	.part_probes	= wdr7500_part_probes,
+	.part_probes = wdr7500_part_probes,
 };
-
 
 static struct gpio_led wdr7500_leds_gpio[] __initdata = {
 	{
-		.name		= "tp-link:blue:qss",
-		.gpio		= WDR7500_GPIO_LED_QSS,
-		.active_low	= 1,
-	},
+	 .name = "tp-link:blue:qss",
+	 .gpio = WDR7500_GPIO_LED_QSS,
+	 .active_low = 1,
+	 },
 	{
-		.name		= "tp-link:blue:system",
-		.gpio		= WDR7500_GPIO_LED_SYSTEM,
-		.active_low	= 1,
-	},
+	 .name = "tp-link:blue:system",
+	 .gpio = WDR7500_GPIO_LED_SYSTEM,
+	 .active_low = 1,
+	 },
 	{
-		.name		= "tp-link:green:usb1",
-		.gpio		= WDR7500_GPIO_LED_USB1,
-		.active_low	= 1,
-	},
+	 .name = "tp-link:green:usb1",
+	 .gpio = WDR7500_GPIO_LED_USB1,
+	 .active_low = 1,
+	 },
 	{
-		.name		= "tp-link:green:usb2",
-		.gpio		= WDR7500_GPIO_LED_USB2,
-		.active_low	= 1,
-	},
+	 .name = "tp-link:green:usb2",
+	 .gpio = WDR7500_GPIO_LED_USB2,
+	 .active_low = 1,
+	 },
+	{
+	 .name = "tp-link:blue:wlan2g",
+	 .gpio = WDR7500_GPIO_LED_WLAN2G,
+	 .active_low = 1,
+	 },
+	{
+	 .name = "tp-link:blue:wlan5g",
+	 .gpio = WDR7500_GPIO_LED_WLAN5G,
+	 .active_low = 1,
+	 },
 };
 
 static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
 	{
-		.desc		= "QSS button",
-		.type		= EV_KEY,
-		.code		= KEY_WPS_BUTTON,
-		.debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
-		.gpio		= WDR7500_GPIO_BTN_WPS,
-		.active_low	= 1,
-	},
+	 .desc = "QSS button",
+	 .type = EV_KEY,
+	 .code = KEY_WPS_BUTTON,
+	 .debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
+	 .gpio = WDR7500_GPIO_BTN_WPS,
+	 .active_low = 1,
+	 },
 	{
-		.desc		= "RFKILL0 switch",
-		.type		= EV_SW,
-		.code		= KEY_RFKILL,
-		.debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
-		.gpio		= WDR7500_GPIO_BTN_RFKILL0,
-		.active_low	= 1,
-	},
-	{
-		.desc		= "RFKILL1 switch",
-		.type		= EV_SW,
-		.code		= KEY_RFKILL,
-		.debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
-		.gpio		= WDR7500_GPIO_BTN_RFKILL1,
-		.active_low	= 1,
-	},
+	 .desc = "RFKILL button",
+	 .type = EV_KEY,
+	 .code = KEY_RFKILL,
+	 .debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
+	 .gpio = WDR7500_GPIO_BTN_RFKILL0,
+	 .active_low = 1,
+	 },
 };
 
+/* GMAC0 of the AR8327 switch is connected to GMAC1 via SGMII */
 static struct ar8327_pad_cfg wdr7500_ar8327_pad0_cfg = {
-	/* GMAC0 of the AR8327 switch is connected to GMAC1 via SGMII */
+
 	.mode = AR8327_PAD_MAC_SGMII,
 	.sgmii_delay_en = true,
 };
 
+/* GMAC6 of the AR8327 switch is connected to GMAC0 via RGMII */
 static struct ar8327_pad_cfg wdr7500_ar8327_pad6_cfg = {
-	/* GMAC6 of the AR8327 switch is connected to GMAC0 via RGMII */
 	.mode = AR8327_PAD_MAC_RGMII,
 	.txclk_delay_en = true,
 	.rxclk_delay_en = true,
@@ -123,28 +129,29 @@ static struct ar8327_platform_data wdr7500_ar8327_data = {
 	.pad0_cfg = &wdr7500_ar8327_pad0_cfg,
 	.pad6_cfg = &wdr7500_ar8327_pad6_cfg,
 	.port0_cfg = {
-		.force_link = 1,
-		.speed = AR8327_PORT_SPEED_1000,
-		.duplex = 1,
-		.txpause = 1,
-		.rxpause = 1,
-	},
+		      .force_link = 1,
+		      .speed = AR8327_PORT_SPEED_1000,
+		      .duplex = 1,
+		      .txpause = 1,
+		      .rxpause = 1,
+		      },
 	.port6_cfg = {
-		.force_link = 1,
-		.speed = AR8327_PORT_SPEED_1000,
-		.duplex = 1,
-		.txpause = 1,
-		.rxpause = 1,
-	},
+		      .force_link = 1,
+		      .speed = AR8327_PORT_SPEED_1000,
+		      .duplex = 1,
+		      .txpause = 1,
+		      .rxpause = 1,
+		      },
 };
 
 static struct mdio_board_info wdr7500_mdio0_info[] = {
 	{
-		.bus_id = "ag71xx-mdio.0",
-		.phy_addr = 0,
-		.platform_data = &wdr7500_ar8327_data,
-	},
+	 .bus_id = "ag71xx-mdio.0",
+	 .phy_addr = 0,
+	 .platform_data = &wdr7500_ar8327_data,
+	 },
 };
+
 static void __init ath79_setup_qca955x_eth_cfg(u32 mask)
 {
 	void __iomem *base;
@@ -172,6 +179,18 @@ static void __init wdr7500_setup(void)
 
 	ath79_register_leds_gpio(-1, ARRAY_SIZE(wdr7500_leds_gpio),
 				 wdr7500_leds_gpio);
+
+	/*
+	 * The rfkill button is different on trial production and mass production models.
+	 * In tp-links code they use GPIO13 for trial production and GPIO23 for mass production.
+	 * To see what model you have query GPIO20 where 0 indicates mass production.
+	 */
+	gpio_request_one(WDR7500_GPIO_MODEL_REVISION,
+			 GPIOF_DIR_IN | GPIOF_EXPORT_DIR_FIXED,
+			 "Model revision");
+	if (gpio_get_value(WDR7500_GPIO_MODEL_REVISION) == 0)
+		wdr7500_gpio_keys[1].gpio = WDR7500_GPIO_BTN_RFKILL1;
+
 	ath79_register_gpio_keys_polled(-1, WDR7500_KEYS_POLL_INTERVAL,
 					ARRAY_SIZE(wdr7500_gpio_keys),
 					wdr7500_gpio_keys);
@@ -205,7 +224,7 @@ static void __init wdr7500_setup(void)
 
 	ath79_register_eth(0);
 
-	/* GMAC1 is connected tot eh SGMII interface */
+	/* GMAC1 is connected to the SGMII interface */
 	ath79_eth1_data.phy_if_mode = PHY_INTERFACE_MODE_SGMII;
 	ath79_eth1_data.speed = SPEED_1000;
 	ath79_eth1_data.duplex = DUPLEX_FULL;
@@ -217,5 +236,4 @@ static void __init wdr7500_setup(void)
 }
 
 MIPS_MACHINE(ATH79_MACH_TL_WDR7500, "TL-WDR7500",
-	     "TP-LINK TL-WDR7500",
-	      wdr7500_setup);
+	     "TP-LINK TL-WDR7500", wdr7500_setup);
