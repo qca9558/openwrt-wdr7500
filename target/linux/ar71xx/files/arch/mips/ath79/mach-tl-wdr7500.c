@@ -31,9 +31,7 @@
 #define WDR7500_GPIO_LED_USB2		19
 #define WDR7500_GPIO_LED_SYSTEM		14
 #define WDR7500_GPIO_LED_QSS			15
-
 #define WDR7500_GPIO_BTN_WPS		16
-#define WDR7500_GPIO_BTN_RFKILL		23
 
 #define WDR7500_GPIO_USB1_POWER		22
 #define WDR7500_GPIO_USB2_POWER		21
@@ -96,13 +94,6 @@ static struct gpio_keys_button wdr7500_gpio_keys[] __initdata = {
 	 .debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
 	 .gpio = WDR7500_GPIO_BTN_WPS,
 	 .active_low = 1,
-	 },
-	{
-	 .desc = "RFKILL switch",
-	 .type = EV_SW,
-	 .code = KEY_RFKILL,
-	 .debounce_interval = WDR7500_KEYS_DEBOUNCE_INTERVAL,
-	 .gpio = WDR7500_GPIO_BTN_RFKILL,
 	 },
 };
 
