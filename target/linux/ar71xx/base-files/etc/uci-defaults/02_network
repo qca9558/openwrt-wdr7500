@@ -44,13 +44,6 @@ ap135-020)
 	ucidef_add_switch_vlan "switch0" "2" "5 6"
 	;;
 
-tl-wdr7500)
-	ucidef_set_interfaces_lan_wan "eth1" "eth0"
-	ucidef_add_switch "switch0" "1" "1"
-	ucidef_add_switch_vlan "switch0" "1" "0 2 3 4 5"
-	ucidef_add_switch_vlan "switch0" "2" "1 6"
-	;;
-
 db120 |\
 rb-2011l | \
 rb-2011uas-2hnd)
@@ -136,6 +129,13 @@ tl-wr1041n-v2)
 	ucidef_add_switch "switch0" "1" "1"
 	ucidef_add_switch_vlan "switch0" "1" "0t 2 3 4 5"
 	ucidef_add_switch_vlan "switch0" "2" "0t 1"
+	;;
+
+tl-wdr7500)
+	ucidef_set_interfaces_lan_wan "eth1" "eth0"
+	ucidef_add_switch "switch0" "1" "1"
+	ucidef_add_switch_vlan "switch0" "1" "0 2 3 4 5"
+	ucidef_add_switch_vlan "switch0" "2" "1 6"
 	;;
 
 tl-wr1043nd)
