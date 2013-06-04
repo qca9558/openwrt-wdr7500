@@ -166,6 +166,7 @@ platform_check_image() {
 	tl-wa901nd-v2 | \
 	tl-wdr3500 | \
 	tl-wdr4300 | \
+	tl-wdr7500 | \
 	tl-wr703n | \
 	tl-wr720n-v3 | \
 	tl-wr741nd | \
@@ -176,7 +177,6 @@ platform_check_image() {
 	tl-wr941nd | \
 	tl-wr1041n-v2 | \
 	tl-wr1043nd | \
-	tl-wdr7500 | \
 	tl-wr2543n)
 		[ "$magic" != "0100" ] && {
 			echo "Invalid image type."
