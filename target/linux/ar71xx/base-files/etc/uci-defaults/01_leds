@@ -156,7 +156,8 @@ tl-wdr4300)
 	ucidef_set_led_wlan "wlan2g" "WLAN2G" "tp-link:blue:wlan2g" "phy0tpt"
 	;;
 
-tl-wdr7500)
+tl-wdr7500 | \
+archer-c7)
 	ucidef_set_led_usbdev "usb1" "USB1" "tp-link:green:usb1" "1-1"
 	ucidef_set_led_usbdev "usb2" "USB2" "tp-link:green:usb2" "2-1"
 	ucidef_set_led_wlan "wlan2g" "WLAN2G" "tp-link:blue:wlan2g" "phy0tpt"

@@ -132,6 +132,7 @@ get_status_led() {
 	tl-wr941nd)
 		status_led="tp-link:green:system"
 		;;
+	archer-c7 | \
 	tl-wdr4300 | \
 	tl-wdr7500 | \
 	tl-wr703n | \

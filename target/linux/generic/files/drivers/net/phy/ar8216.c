@@ -88,8 +88,12 @@ struct ar8xxx_priv {
 	struct switch_dev dev;
 	struct mii_bus *mii_bus;
 	struct phy_device *phy;
+
 	u32 (*read)(struct ar8xxx_priv *priv, int reg);
 	void (*write)(struct ar8xxx_priv *priv, int reg, u32 val);
+
+	int (*get_port_link)(unsigned port);
+
 	const struct net_device_ops *ndo_old;
 	struct net_device_ops ndo;
 	struct mutex reg_mutex;
@@ -480,11 +484,20 @@ ar8216_read_port_link(struct ar8xxx_priv *priv, int port,
 	link->aneg = !!(status & AR8216_PORT_STATUS_LINK_AUTO);
 	if (link->aneg) {
 		link->link = !!(status & AR8216_PORT_STATUS_LINK_UP);
-		if (!link->link)
-			return;
 	} else {
 		link->link = true;
+
+		if (priv->get_port_link) {
+			int err;
+
+			err = priv->get_port_link(port);
+			if (err >= 0)
+				link->link = !!err;
+		}
 	}
+
+	if (!link->link)
+		return;
 
 	link->duplex = !!(status & AR8216_PORT_STATUS_DUPLEX);
 	link->tx_flow = !!(status & AR8216_PORT_STATUS_TXFLOW);
@@ -1058,6 +1071,8 @@ ar8327_hw_config_pdata(struct ar8xxx_priv *priv,
 	if (!pdata)
 		return -EINVAL;
 
+	priv->get_port_link = pdata->get_port_link;
+
 	data = &priv->chip_data.ar8327;
 
 	data->port0_status = ar8327_get_port_init_status(&pdata->port0_cfg);
@@ -1084,12 +1099,31 @@ ar8327_hw_config_pdata(struct ar8xxx_priv *priv,
 		priv->write(priv, AR8327_REG_LED_CTRL1, led_cfg->led_ctrl1);
 		priv->write(priv, AR8327_REG_LED_CTRL2, led_cfg->led_ctrl2);
 		priv->write(priv, AR8327_REG_LED_CTRL3, led_cfg->led_ctrl3);
+
+		if (new_pos != pos)
+			new_pos |= AR8327_POWER_ON_STRIP_POWER_ON_SEL;
 	}
 
-	if (new_pos != pos) {
-		new_pos |= AR8327_POWER_ON_STRIP_POWER_ON_SEL;
-		priv->write(priv, AR8327_REG_POWER_ON_STRIP, new_pos);
+	if (pdata->sgmii_cfg) {
+		t = pdata->sgmii_cfg->sgmii_ctrl;
+		if (priv->chip_rev == 1)
+			t |= AR8327_SGMII_CTRL_EN_PLL |
+			     AR8327_SGMII_CTRL_EN_RX |
+			     AR8327_SGMII_CTRL_EN_TX;
+		else
+			t &= ~(AR8327_SGMII_CTRL_EN_PLL |
+			       AR8327_SGMII_CTRL_EN_RX |
+			       AR8327_SGMII_CTRL_EN_TX);
+
+		priv->write(priv, AR8327_REG_SGMII_CTRL, t);
+
+		if (pdata->sgmii_cfg->serdes_aen)
+			new_pos &= ~AR8327_POWER_ON_STRIP_SERDES_AEN;
+		else
+			new_pos |= AR8327_POWER_ON_STRIP_SERDES_AEN;
 	}
+
+	priv->write(priv, AR8327_REG_POWER_ON_STRIP, new_pos);
 
 	return 0;
 }
@@ -2413,8 +2447,9 @@ ar8xxx_phy_probe(struct phy_device *phydev)
 	if (ret)
 		goto free_priv;
 
-	pr_info("%s: %s switch registered on %s\n",
-		swdev->devname, swdev->name, dev_name(&priv->mii_bus->dev));
+	pr_info("%s: %s rev. %u switch registered on %s\n",
+		swdev->devname, swdev->name, priv->chip_rev,
+		dev_name(&priv->mii_bus->dev));
 
 found:
 	priv->use_count++;

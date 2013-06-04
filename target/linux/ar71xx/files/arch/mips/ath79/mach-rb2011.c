@@ -32,11 +32,13 @@
 #include "dev-eth.h"
 #include "dev-m25p80.h"
 #include "dev-nfc.h"
+#include "dev-usb.h"
 #include "dev-wmac.h"
 #include "machtypes.h"
 #include "routerboot.h"
 
 #define RB2011_GPIO_NAND_NCE	14
+#define RB2011_GPIO_SFP_LOS	21
 
 #define RB_ROUTERBOOT_OFFSET	0x0000
 #define RB_ROUTERBOOT_MIN_SIZE	0xb000
@@ -115,8 +117,19 @@ static struct ar8327_pad_cfg rb2011_ar8327_pad0_cfg = {
 	.mode = AR8327_PAD_MAC_RGMII,
 	.txclk_delay_en = true,
 	.rxclk_delay_en = true,
-	.txclk_delay_sel = AR8327_CLK_DELAY_SEL1,
-	.rxclk_delay_sel = AR8327_CLK_DELAY_SEL2,
+	.txclk_delay_sel = AR8327_CLK_DELAY_SEL3,
+	.rxclk_delay_sel = AR8327_CLK_DELAY_SEL0,
+};
+
+static struct ar8327_pad_cfg rb2011_ar8327_pad6_cfg;
+static struct ar8327_sgmii_cfg rb2011_ar8327_sgmii_cfg;
+
+static struct ar8327_led_cfg rb2011_ar8327_led_cfg = {
+	.led_ctrl0 = 0x0000c731,
+	.led_ctrl1 = 0x00000000,
+	.led_ctrl2 = 0x00000000,
+	.led_ctrl3 = 0x0030c300,
+	.open_drain = false,
 };
 
 static struct ar8327_platform_data rb2011_ar8327_data = {
@@ -127,7 +140,8 @@ static struct ar8327_platform_data rb2011_ar8327_data = {
 		.duplex = 1,
 		.txpause = 1,
 		.rxpause = 1,
-	}
+	},
+	.led_cfg = &rb2011_ar8327_led_cfg,
 };
 
 static struct mdio_board_info rb2011_mdio0_info[] = {
@@ -212,6 +226,8 @@ static int rb2011_nand_scan_fixup(struct mtd_info *mtd)
 
 static void __init rb2011_nand_init(void)
 {
+	gpio_request_one(RB2011_GPIO_NAND_NCE, GPIOF_OUT_INIT_HIGH, "NAND nCE");
+
 	ath79_nfc_set_scan_fixup(rb2011_nand_scan_fixup);
 	ath79_nfc_set_parts(rb2011_nand_partitions,
 			    ARRAY_SIZE(rb2011_nand_partitions));
@@ -220,15 +236,38 @@ static void __init rb2011_nand_init(void)
 	ath79_register_nfc();
 }
 
-static void __init rb2011_gpio_init(void)
+static int rb2011_get_port_link(unsigned port)
 {
-	gpio_request_one(RB2011_GPIO_NAND_NCE, GPIOF_OUT_INIT_HIGH, "NAND nCE");
+	if (port != 6)
+		return -EINVAL;
+
+	/* The Loss of signal line is active low */
+	return !gpio_get_value(RB2011_GPIO_SFP_LOS);
+}
+
+static void __init rb2011_sfp_init(void)
+{
+	gpio_request_one(RB2011_GPIO_SFP_LOS, GPIOF_IN, "SFP LOS");
+
+	rb2011_ar8327_pad6_cfg.mode = AR8327_PAD_MAC_SGMII;
+
+	rb2011_ar8327_data.pad6_cfg = &rb2011_ar8327_pad6_cfg;
+
+	rb2011_ar8327_sgmii_cfg.sgmii_ctrl = 0xc70167d0;
+	rb2011_ar8327_sgmii_cfg.serdes_aen = true;
+
+	rb2011_ar8327_data.sgmii_cfg = &rb2011_ar8327_sgmii_cfg;
+
+	rb2011_ar8327_data.port6_cfg.force_link = 1;
+	rb2011_ar8327_data.port6_cfg.speed = AR8327_PORT_SPEED_1000;
+	rb2011_ar8327_data.port6_cfg.duplex = 1;
+
+	rb2011_ar8327_data.get_port_link = rb2011_get_port_link;
 }
 
 static void __init rb2011_setup(void)
 {
 	rb2011_init_partitions();
-	rb2011_gpio_init();
 
 	ath79_register_m25p80(&rb2011_spi_flash_data);
 	rb2011_nand_init();
@@ -263,10 +302,24 @@ static void __init rb2011_setup(void)
 MIPS_MACHINE(ATH79_MACH_RB_2011L, "2011L", "MikroTik RouterBOARD 2011L",
 	     rb2011_setup);
 
+static void __init rb2011us_setup(void)
+{
+	rb2011_setup();
+	rb2011_sfp_init();
+
+	ath79_register_usb();
+}
+
+MIPS_MACHINE(ATH79_MACH_RB_2011US, "2011US", "MikroTik RouterBOARD 2011UAS",
+	     rb2011us_setup);
+
 static void __init rb2011g_setup(void)
 {
 	rb2011_setup();
+	rb2011_sfp_init();
 	rb2011_wlan_init();
+
+	ath79_register_usb();
 }
 
 MIPS_MACHINE(ATH79_MACH_RB_2011G, "2011G", "MikroTik RouterBOARD 2011UAS-2HnD",
